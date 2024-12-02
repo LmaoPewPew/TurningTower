@@ -1,0 +1,45 @@
+#version 330 core
+
+// Input vertex data
+layout(location = 0) in vec3 vertexPosition_modelspace;
+layout(location = 1) in vec3 vertexNormal_modelspace;
+
+// Uniforms for transformation and lighting
+uniform mat4 MVP; // Model-View-Projection matrix
+uniform mat4 MV;  // Model-View matrix for lighting
+uniform vec4 Lightsource;
+
+// Output variables
+out vec3 fNormal;
+out vec3 fPosition;
+out vec3 fLight;
+out vec3 materialColor;
+
+void main(){
+    fLight = Lightsource.xyz;
+
+    // Apply the transformation (MVP matrix) to the vertex position
+    vec4 transformedPosition = MVP * vec4(vertexPosition_modelspace, 1.0);
+    fPosition = (MV * vec4(vertexPosition_modelspace, 1.0)).xyz;
+
+    // Transform the normal (inverted transpose of MV for lighting calculations)
+    mat4 normalMatrix = transpose(inverse(MV));
+    vec4 transformedNormal = normalMatrix * vec4(vertexNormal_modelspace, 1.0);
+    fNormal = transformedNormal.xyz;
+
+    // Set material color based on the vertex position
+    if (vertexPosition_modelspace.y > 3.5) {
+        materialColor = vec3(1.0, 0.0, 0.0);  // Red
+    } else if (vertexPosition_modelspace.y < 2.5) {
+        materialColor = vec3(0.0, 1.0, 0.0);  // Green
+    } else if (vertexPosition_modelspace.x < -2.0) {
+        materialColor = vec3(0.0, 0.0, 1.0);  // Blue (left side)
+    } else if (vertexPosition_modelspace.x > 2.0) {
+        materialColor = vec3(1.0, 1.0, 0.0);  // Yellow (right side)
+    } else {
+        materialColor = vec3(1.0, 1.0, 1.0);  // White (center)
+    }
+
+    // Set final position in clip space
+    gl_Position = transformedPosition;
+}

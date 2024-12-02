@@ -1,0 +1,42 @@
+#version 330 core
+
+// Output data
+out vec3 color;
+
+// Input data
+in vec3 fNormal;
+in vec3 fPosition;
+in vec3 fLight;
+in vec3 materialColor;
+
+void main()
+{
+    // Precompute the normalized vectors
+    vec3 N = normalize(fNormal);            // Normalized surface normal
+    vec3 V = normalize(fPosition);          // View direction (fragment to eye)
+    vec3 L = normalize(fLight - fPosition); // Light direction (light to fragment)
+
+    // Material parameters
+    float ka = 0.1;
+    float ks = 0.7;
+    float kd = 0.3;
+    float shininess = 100.0;
+
+    // Compute reflection vector
+    vec3 R = reflect(-L, N); 
+
+    // Ambient intensity: Constant, no light direction involved
+    float Iamb = ka;    
+
+    // Diffuse intensity: Lambertian reflection (angle between normal and light direction)
+    float Idiff = kd * max(dot(N, L), 0.0); 
+
+    // Specular intensity: Phong reflection model (sharpness controlled by shininess)
+    float Ispec = ks * pow(max(dot(R, V), 0.0), 0.3 * shininess);
+
+    // Compute final intensity (clamp individual components if needed)
+    float Intensity = Iamb + clamp(Idiff, 0.0, 1.0) + clamp(Ispec, 0.0, 1.0);   
+
+    // Final color output (modulated by material color)
+    color = Intensity * materialColor;
+}
